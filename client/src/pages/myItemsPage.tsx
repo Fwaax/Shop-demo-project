@@ -15,31 +15,52 @@ const MyItemsPage = () => {
     const { data: myItems = [], isLoading, isError, refetch } = useQuery({
         staleTime: 0,
         gcTime: 0,
-        queryKey: ["myItems", payload, token], // Rerending when token changes
-
+        queryKey: ["myItems", payload, token],
         queryFn: async () => {
+            if (!payload) {
+                console.warn("Payload is undefined, returning empty array.");
+                return [];
+            }
             try {
-                if (!payload) {
-                    return null;
-                }
-                const theID = payload.id
                 const response = await axios({
                     method: 'get',
-                    url: `http://localhost:7821/item/${theID}`,
+                    url: `http://localhost:7821/item/${payload.id}`,
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
-                })
-                return response.data
+                });
+                return response.data || []; // Ensure response is always defined
             } catch (error) {
-                console.log(`error axios get my items`, error);
+                console.error("Error fetching my items:", error);
+                return []; // Return empty array on error
             }
         },
-        refetchOnMount: shouldRefetch
-    })
+        refetchOnMount: shouldRefetch,
+    });
+
 
     function handleAddItem() {
         navigate("/post-item");
+    }
+
+    async function handlePostItem(event: React.MouseEvent<HTMLButtonElement>) {
+        event.preventDefault();
+        try {
+            if (!payload) {
+                return null;
+            }
+            const theID = payload.id
+            const response = await axios({
+                method: 'post',
+                url: `http://localhost:7821/item/post-to-shop`,
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            })
+            return response.data
+        } catch (error) {
+            console.log(`error my items page post handle`, error);
+        }
     }
 
     if (!token) {
@@ -57,26 +78,22 @@ const MyItemsPage = () => {
                     <table className='w-[70%] table-fixed border-collapse border border-gray-300'>
                         <thead>
                             <tr>
-                                <th className='border border-gray-300'>Transaction Hash</th>
                                 <th className='border border-gray-300'>Name</th>
                                 <th className='border border-gray-300'>Quantity</th>
                                 <th className='border border-gray-300'>Price</th>
-                                <th className='border border-gray-300'>Date</th>
                                 <th className='border border-gray-300'>Description</th>
                                 <th className='border border-gray-300'>ImageUrl</th>
+                                <th className='border border-gray-300'>Post to shop</th>
                             </tr>
                             {
                                 myItems.map((item: IPopulatedTransferHistory) => (
                                     <tr key={item._id}>
-                                        <td className='border border-gray-300 overflow-hidden'>{item._id}</td>
                                         <td className='border border-gray-300'>{item.itemId.name}</td>
                                         <td className='border border-gray-300'>{item.quantity}</td>
                                         <td className='border border-gray-300'>{item.totalCost}</td>
-                                        <td className="border border-gray-300">
-                                            {new Date(item.dateInUnix * 1000).toISOString().split("T")[0]}
-                                        </td>
                                         <td className='border border-gray-300'>{item.itemId.description}</td>
                                         <td className='border border-gray-300'>{item.itemId.imageUrl}</td>
+                                        <td className='border border-gray-300'><button className='px-4 py-2 text-white bg-[#a1a1a1] rounded-lg hover:bg-[#556b82] focus:outline-none focus:ring-2 focus:ring-[#556b82]'>Post</button></td>
                                     </tr>
                                 ))
                             }
