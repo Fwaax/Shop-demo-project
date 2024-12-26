@@ -24,7 +24,8 @@ const MyItemsPage = () => {
             try {
                 const response = await axios({
                     method: 'get',
-                    url: `http://localhost:7821/item/${payload.id}`,
+                    // url: `http://localhost:7821/user/:userId/items${payload.id}`,
+                    url: `http://localhost:7821/user/${payload.id}/items`,
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

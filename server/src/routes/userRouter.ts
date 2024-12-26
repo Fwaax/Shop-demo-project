@@ -4,6 +4,7 @@ import { userGuard } from "../guard/userGuard";
 import { AuthorizedRequest } from "../interfaces";
 import bcrypt from "bcrypt";
 import { hashPassword } from "../utils/hasherPw";
+import { ItemModel } from "../schema/item";
 
 
 
@@ -70,5 +71,20 @@ userRouter.put("/update", userGuard, async (req: AuthorizedRequest, res: Respons
     }
 });
 
+userRouter.get("/:userId/items", userGuard, async (req: AuthorizedRequest, res: Response) => {
+    try {
+        const { userId } = req.params;
+        if (userId !== req.jwtDecodedUser.id) {
+            return res.status(403).send({ message: "You are not authorized to view this user's items." });
+        }
+        const itemsStored = await ItemModel.find({ userId: userId });
+        if (itemsStored.length === 0) {
+            return res.status(404).send({ message: "No items found userRouter" });
+        }
+        return res.status(200).send(itemsStored);
+    } catch (error) {
+        res.status(500).send({ message: "Error fetching items.", error });
+    }
+})
 
 export default userRouter;

@@ -10,14 +10,12 @@ const PostItemPage = () => {
     const [itemDescription, setItemDescription] = useState('');
     const [itemImage, setItemImage] = useState('');
     const [itemQuantity, setItemQuantity] = useState('');
-    const { token } = useJwtToken();
+    const { token, payload } = useJwtToken();
     const navigate = useNavigate();
 
     async function handlePostItem(event: React.MouseEvent<HTMLButtonElement>) {
         event.preventDefault();
         try {
-            // const token = localStorage.getItem('token');
-            // const {token} = useJwtToken();
             if (!token) {
                 navigate('/login');
                 return;

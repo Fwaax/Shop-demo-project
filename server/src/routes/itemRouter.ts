@@ -11,6 +11,7 @@ import { AuthorizedRequest } from "../interfaces";
 import { ItemValidationJoi } from "../validation/itemValidationJoi";
 import { UserModel } from "../schema/user";
 import { ObjectId } from "mongoose";
+import { IInventory, IventoryModel } from "../schema/inventory";
 
 const itemRouter: Router = express.Router();
 
@@ -29,6 +30,10 @@ itemRouter.get("/", async (req: Request, res: Response) => {
 itemRouter.get("/item/:id", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
         const requestedUserId = req.jwtDecodedUser.id;
+        const userWithItem = await UserModel.findById(requestedUserId);
+        if (!userWithItem) {
+            return res.status(404).send({ message: "User not found" });
+        }
         const item = await ItemModel.findById(requestedUserId);
         if (!item) {
             return res.status(404).send({ message: "Item not found" });
@@ -66,9 +71,9 @@ itemRouter.post("/new-item", userGuard, async (req: AuthorizedRequest, res: Resp
             return res.status(400).send({ message: "Invalid item quantity" });
         }
         // Add the item to the user's inventory
-        const objectToAddToInventory = { itemId: newItemObjectId, quantity: itemQuantity };
-        foundUser.inventory.push(objectToAddToInventory);
-        await foundUser.save();
+        const objectToAddToInventory: IInventory = { userId: foundUser._id, itemId: newItemObjectId, quantity: itemQuantity };
+        // add item to inventoryschema
+        await IventoryModel.create(objectToAddToInventory);
         console.log(`newItem`, newItem);
         return res.status(200).send({ message: "Item added successfully", item: newItem });
     } catch (error) {
@@ -100,7 +105,6 @@ itemRouter.post("/post-to-shop", userGuard, async (req: AuthorizedRequest, res: 
         }
         // Add the item to the user's inventory
         const objectToAddToInventory = { itemId: newItemObjectId, quantity: itemQuantity };
-        foundUser.inventory.push(objectToAddToInventory);
         await foundUser.save();
         console.log(`newItem`, newItem);
         return res.status(200).send({ message: "Item added successfully", item: newItem });
