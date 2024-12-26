@@ -17,7 +17,6 @@ registerRouter.post("/register", async (req: Request, res: Response) => {
             firstName,
             lastName,
             balance: 0,
-            inventory: [],
             email,
             hashedPassword: hashPassword(password),
         };

@@ -12,10 +12,10 @@ const MyItemsPage = () => {
 
     const shouldRefetch = location.state?.refetch ?? false;
 
-    const { data: myItems = [], isLoading, isError, refetch } = useQuery({
+    const { data: myInventory = [], isLoading, isError, refetch } = useQuery({
         staleTime: 0,
         gcTime: 0,
-        queryKey: ["myItems", payload, token],
+        queryKey: ["myInventory", payload, token],
         queryFn: async () => {
             if (!payload) {
                 console.warn("Payload is undefined, returning empty array.");
@@ -24,13 +24,22 @@ const MyItemsPage = () => {
             try {
                 const response = await axios({
                     method: 'get',
-                    // url: `http://localhost:7821/user/:userId/items${payload.id}`,
-                    url: `http://localhost:7821/user/${payload.id}/items`,
+                    url: `http://localhost:7821/item/my-items`,
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
-                return response.data || []; // Ensure response is always defined
+                const itemObjectList = response.data as {
+                    item: {
+                        _id: string;
+                        name: string;
+                        description: string;
+                        imageUrl: string;
+                    },
+                    quantity: number
+                }[];
+
+                return itemObjectList || []; // Ensure response is always defined
             } catch (error) {
                 console.error("Error fetching my items:", error);
                 return []; // Return empty array on error
@@ -44,25 +53,25 @@ const MyItemsPage = () => {
         navigate("/post-item");
     }
 
-    async function handlePostItem(event: React.MouseEvent<HTMLButtonElement>) {
-        event.preventDefault();
-        try {
-            if (!payload) {
-                return null;
-            }
-            const theID = payload.id
-            const response = await axios({
-                method: 'post',
-                url: `http://localhost:7821/item/post-to-shop`,
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            })
-            return response.data
-        } catch (error) {
-            console.log(`error my items page post handle`, error);
-        }
-    }
+    // async function handlePostItem(event: React.MouseEvent<HTMLButtonElement>) {
+    //     event.preventDefault();
+    //     try {
+    //         if (!payload) {
+    //             return null;
+    //         }
+    //         const theID = payload.id
+    //         const response = await axios({
+    //             method: 'post',
+    //             url: `http://localhost:7821/item/post-to-shop`,
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`
+    //             }
+    //         })
+    //         return response.data
+    //     } catch (error) {
+    //         console.log(`error my items page post handle`, error);
+    //     }
+    // }
 
     if (!token) {
         return <div>You are not logged in</div>
@@ -80,20 +89,16 @@ const MyItemsPage = () => {
                         <thead>
                             <tr>
                                 <th className='border border-gray-300'>Name</th>
-                                <th className='border border-gray-300'>Quantity</th>
-                                <th className='border border-gray-300'>Price</th>
                                 <th className='border border-gray-300'>Description</th>
-                                <th className='border border-gray-300'>ImageUrl</th>
+                                <th className='border border-gray-300'>Quantity</th>
                                 <th className='border border-gray-300'>Post to shop</th>
                             </tr>
                             {
-                                myItems.map((item: IPopulatedTransferHistory) => (
-                                    <tr key={item._id}>
-                                        <td className='border border-gray-300'>{item.itemId.name}</td>
-                                        <td className='border border-gray-300'>{item.quantity}</td>
-                                        <td className='border border-gray-300'>{item.totalCost}</td>
-                                        <td className='border border-gray-300'>{item.itemId.description}</td>
-                                        <td className='border border-gray-300'>{item.itemId.imageUrl}</td>
+                                myInventory.map((inv) => (
+                                    <tr key={inv.item._id}>
+                                        <td className='border border-gray-300'>{inv.item.name}</td>
+                                        <td className='border border-gray-300'>{inv.item.description}</td>
+                                        <td className='border border-gray-300'>{inv.quantity}</td>
                                         <td className='border border-gray-300'><button className='px-4 py-2 text-white bg-[#a1a1a1] rounded-lg hover:bg-[#556b82] focus:outline-none focus:ring-2 focus:ring-[#556b82]'>Post</button></td>
                                     </tr>
                                 ))
