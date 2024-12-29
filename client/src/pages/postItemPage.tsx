@@ -29,7 +29,7 @@ const PostItemPage = () => {
                 },
             })
             console.log(`response`, response);
-            navigate('/', { state: { refetch: true } });
+            navigate('/my-items', { state: { refetch: true } });
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
                 console.log(`Failed to post item axios error`, error.response.data);

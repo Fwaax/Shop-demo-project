@@ -11,21 +11,37 @@ import { AuthorizedRequest } from "../interfaces";
 import { ItemValidationJoi } from "../validation/itemValidationJoi";
 import { UserModel } from "../schema/user";
 import { ObjectId } from "mongoose";
-import { IInventory, IventoryModel } from "../schema/inventory";
+import { IInventory, InventoryModel } from "../schema/inventory";
+import { Store, StoreModel } from "../schema/store";
+import { log } from "node:console";
 
 const itemRouter: Router = express.Router();
 
 itemRouter.get("/", async (req: Request, res: Response) => {
     try {
-        const itemsStored = await ItemModel.find();
-        if (itemsStored.length === 0) {
+        const itemsInStore = await StoreModel.find()
+            .populate({
+                path: "itemId",
+                model: "Item", // Populate with data from the "Item" model
+                select: "name description imageUrl", // Select only necessary fields
+            })
+            .populate({
+                path: "ownerId",
+                model: "User", // Replace "User" with the correct model name for your user schema
+                select: "nickname email", // Select only necessary fields
+            });
+
+        if (itemsInStore.length === 0) {
             return res.status(404).send({ message: "No items found" });
         }
-        return res.status(200).send(itemsStored);
+        log(`itemsInStore`, itemsInStore)
+        return res.status(200).send(itemsInStore);
     } catch (error) {
+        console.error("Error fetching items in store:", error);
         res.status(500).send({ message: "Error fetching items.", error });
     }
 });
+
 
 itemRouter.get("/item/:id", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
@@ -73,7 +89,7 @@ itemRouter.post("/new-item", userGuard, async (req: AuthorizedRequest, res: Resp
         // Add the item to the user's inventory
         const objectToAddToInventory: IInventory = { userId: foundUser._id, itemId: newItemObjectId, quantity: itemQuantity };
         // add item to inventoryschema
-        await IventoryModel.create(objectToAddToInventory);
+        await InventoryModel.create(objectToAddToInventory);
         console.log(`newItem`, newItem);
         return res.status(200).send({ message: "Item added successfully", item: newItem });
     } catch (error) {
@@ -89,7 +105,7 @@ itemRouter.get("/my-items", userGuard, async (req: AuthorizedRequest, res: Respo
         const requestedUserId = req.jwtDecodedUser.id;
 
         // Find inventory items for the user and populate item details
-        const userInventory = await IventoryModel.find({ userId: requestedUserId })
+        const userInventory = await InventoryModel.find({ userId: requestedUserId })
             .populate('itemId') // Populates the item details based on itemId reference
             .select('-userId -_id'); // Exclude the userId and _id fields from the result
 
@@ -98,9 +114,6 @@ itemRouter.get("/my-items", userGuard, async (req: AuthorizedRequest, res: Respo
             item: inventory.itemId,
             quantity: inventory.quantity,
         }));
-
-        console.log(`User items with quantities:`, items);
-
         return res.status(200).send(items);
     } catch (error) {
         console.log(`Error fetching items:`, error);
@@ -108,6 +121,56 @@ itemRouter.get("/my-items", userGuard, async (req: AuthorizedRequest, res: Respo
     }
 });
 
+itemRouter.get("/my-items/:id", userGuard, async (req: AuthorizedRequest, res: Response) => {
+    try {
+        const requestedUserId = req.jwtDecodedUser.id;
+        const inventoryItem = await InventoryModel.findOne({ userId: requestedUserId, itemId: req.params.id });
+        if (!inventoryItem) {
+            return res.status(404).send({ message: "Item not found in user inventory" });
+        }
+        return res.status(200).send(inventoryItem);
+    } catch (error) {
+        res.status(500).send({ message: "Error fetching item.", error });
+    }
+});
+
+
+
+
+
+itemRouter.post("/post-to-shop", userGuard, async (req: AuthorizedRequest, res: Response) => {
+    try {
+        const requestedUserId = req.jwtDecodedUser.id;
+        const selectedItemId = req.body.itemId;
+
+        const foundUser = await UserModel.findById(requestedUserId).select('-hashedPassword');
+        if (!foundUser) {
+            return res.status(404).send({ message: "User not found" });
+        }
+
+        const itemFromFrontend = await InventoryModel.findOne({ userId: requestedUserId, itemId: selectedItemId });
+        if (!itemFromFrontend) {
+            return res.status(404).send({ message: "Item not found in user inventory" });
+        }
+
+        const item = await ItemModel.findById(selectedItemId);
+        if (!item) {
+            return res.status(404).send({ message: "Item not found" });
+        }
+        const storeConverstion: Store = {
+            ownerId: foundUser._id,
+            itemId: item._id,
+            quantity: itemFromFrontend.quantity,
+            pricePerItem: 3,
+        }
+
+        // Further processing (e.g., adding the item to the shop)
+        res.status(200).send({ message: "Item posted to shop successfully" });
+    } catch (error) {
+        console.error("Error posting item to shop:", error);
+        res.status(500).send({ message: "Error posting item to shop.", error });
+    }
+});
 
 
 
@@ -119,6 +182,7 @@ itemRouter.get("/my-items", userGuard, async (req: AuthorizedRequest, res: Respo
 //         if (!foundUser) {
 //             return res.status(404).send({ message: "User not found" });
 //         }
+
 //         const itemFromFrontend = req.body;
 //         // Convert item data to the expected type
 //         const convertedItem: IItem = {

@@ -18,4 +18,4 @@ const ItemSchema: Schema = new Schema(
     }
 );
 
-export const IventoryModel = mongoose.model<IIventoryDocument>("Inventory", ItemSchema);
+export const InventoryModel = mongoose.model<IIventoryDocument>("Inventory", ItemSchema);

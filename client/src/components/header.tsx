@@ -29,6 +29,10 @@ const Header = () => {
         navigate("/my-items");
     }
 
+    function buyPageHandler() {
+        navigate("/buy");
+    }
+
     const tokenExists = token ? true : false;
 
     return (
@@ -44,15 +48,14 @@ const Header = () => {
                     <div>
                         <nav>
                             <ul className="flex gap-8 text-white font-medium">
-                                <li className="cursor-pointer hover:text-green-400 transition-colors">Buy</li>
-                                <li className="cursor-pointer hover:text-green-400 transition-colors">Sell</li>
+                                <li className="cursor-pointer hover:text-green-400 transition-colors" onClick={buyPageHandler}>Buy</li>
                                 <li className="cursor-pointer hover:text-green-400 transition-colors">History</li>
                                 <li className="cursor-pointer hover:text-green-400 transition-colors">Balance</li>
                                 {tokenExists ? (
                                     <>
                                         <li onClick={myItemsHandler}
                                             className="cursor-pointer hover:text-red-400 transition-colors">
-                                            My shop
+                                            My items
                                         </li>
                                         <li
                                             onClick={accountNavHandler}

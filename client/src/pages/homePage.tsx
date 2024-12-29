@@ -28,7 +28,7 @@ const HomePage = () => {
                         Authorization: `Bearer ${token}`
                     }
                 })
-                // refetch();
+                console.log(`response`, response);
                 return response.data
             } catch (error) {
                 console.log(`error`, error);
@@ -37,18 +37,11 @@ const HomePage = () => {
         refetchOnMount: shouldRefetch
     })
 
-    function handleAddItem() {
-        navigate("/post-item");
-    }
-
     return (
         <div className='w-[100%] flex flex-col mt-[50px]'>
             <div className='flex flex-col items-center'>
                 <div className='text-xl'><strong>All transfers</strong></div>
                 <div className='flex flex-col items-center'>
-                    <div className='w-[70%] flex justify-end' onClick={handleAddItem}>
-                        <button className="px-4 py-2 text-white bg-[#a1a1a1] rounded-lg hover:bg-[#556b82] focus:outline-none focus:ring-2 focus:ring-[#556b82] mb-4">Add Item</button>
-                    </div>
                     <table className='w-[70%] table-fixed border-collapse border border-gray-300'>
                         <thead>
                             <tr>

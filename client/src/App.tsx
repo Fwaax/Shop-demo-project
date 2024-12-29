@@ -9,6 +9,9 @@ import AccountEdit from "./pages/updateAccountPage";
 import PostItemPage from "./pages/postItemPage";
 import GenerateMoneyPage from "./pages/generateMoneyPage";
 import MyItemsPage from "./pages/myItemsPage";
+import BuyPage from "./pages/buyPage";
+import PriceCheck from "./pages/priceCheck";
+import { ModalContainer, ModalProvider } from "./hooks/useModal";
 
 const queryClient = new QueryClient();
 
@@ -37,13 +40,18 @@ const router = createBrowserRouter([
   { path: "/post-item", element: <PostItemPage /> },
   { path: "/generate", element: <GenerateMoneyPage /> },
   { path: "/my-items", element: <MyItemsPage /> },
+  { path: "/buy", element: <BuyPage /> },
+  // { path: "/price-check", element: <PriceCheck /> },
   // { path: "/generate-item", element: <GenerateItemPage /> },
 ]);
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+    <QueryClientProvider client={queryClient} >
+      <ModalProvider>
+        <ModalContainer />
+        <RouterProvider router={router} />
+      </ModalProvider>
     </QueryClientProvider>
   );
 }
