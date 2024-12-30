@@ -8,7 +8,7 @@ export interface IUser {
     balance: number;
 }
 
-export interface IUserDocument extends IUser, Document { _id: ObjectId }
+export interface IUserDocument extends IUser, Document { _id: mongoose.Types.ObjectId }
 
 const UserSchema: Schema = new Schema({
     firstName: { type: String, required: true },

@@ -1,13 +1,13 @@
 import mongoose, { Schema, Document, Types, ObjectId } from "mongoose";
 
 export interface IInventory {
-    userId: ObjectId;
-    itemId: ObjectId;
+    userId: mongoose.Types.ObjectId;
+    itemId: mongoose.Types.ObjectId;
     quantity: number;
 }
 
 export interface IIventoryDocument extends IInventory, Document {
-    _id: ObjectId;
+    _id: mongoose.Types.ObjectId;
 }
 
 const ItemSchema: Schema = new Schema(

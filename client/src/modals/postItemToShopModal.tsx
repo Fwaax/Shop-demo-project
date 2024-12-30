@@ -14,11 +14,11 @@ const PostItemToShopModal = (props: { itemId: string, hide: () => void }) => {
         try {
             const response = await axios({
                 method: 'post',
-                url: `http://localhost:7821/item/item/${props.itemId}`,  // Fix later not currect url for the posting the item to shop
+                url: `http://localhost:7821/item/item`,  // Fix later not currect url for the posting the item to shop
                 headers: {
                     Authorization: `Bearer ${token}`
                 },
-                data: { price: insertedPriceValue, quantity: insertedQuantityValue, itemdId: props.itemId },
+                data: { price: insertedPriceValue, quantity: insertedQuantityValue, itemId: props.itemId },
             });
             console.log(`response`, response);
             return response.data || []; // Ensure response is always defined

@@ -3,8 +3,8 @@ import mongoose, { ObjectId, Schema } from "mongoose";
 interface ITransferHistory {
     itemId: string;
     quantity: number;
-    fromUserID: ObjectId;
-    toUserID: ObjectId;
+    fromUserID: mongoose.Types.ObjectId;
+    toUserID: mongoose.Types.ObjectId;
     totalCost: number;
     dateInUnix: number;
 }

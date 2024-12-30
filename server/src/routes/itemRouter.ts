@@ -10,10 +10,10 @@ import { userGuard } from "../guard/userGuard";
 import { AuthorizedRequest } from "../interfaces";
 import { ItemValidationJoi } from "../validation/itemValidationJoi";
 import { UserModel } from "../schema/user";
-import { ObjectId } from "mongoose";
 import { IInventory, InventoryModel } from "../schema/inventory";
 import { Store, StoreModel } from "../schema/store";
 import { log } from "node:console";
+import mongoose from "mongoose";
 
 const itemRouter: Router = express.Router();
 
@@ -50,6 +50,7 @@ itemRouter.get("/item/:id", userGuard, async (req: AuthorizedRequest, res: Respo
         if (!userWithItem) {
             return res.status(404).send({ message: "User not found" });
         }
+
         const item = await ItemModel.findById(requestedUserId);
         if (!item) {
             return res.status(404).send({ message: "Item not found" });
@@ -59,6 +60,62 @@ itemRouter.get("/item/:id", userGuard, async (req: AuthorizedRequest, res: Respo
         res.status(500).send({ message: "Error fetching item.", error });
     }
 });
+
+itemRouter.post("/item", userGuard, async (req: AuthorizedRequest, res: Response) => {
+    try {
+        const requestedUserId = req.jwtDecodedUser.id;
+
+        // Ensure requestedUserId is valid
+        if (!mongoose.Types.ObjectId.isValid(requestedUserId)) {
+            return res.status(400).send({ message: "Invalid user ID" });
+        }
+        const ownerIdAsObjectId = new mongoose.Types.ObjectId(requestedUserId);
+
+        // Check if the user exists
+        const userWithItem = await UserModel.findById(ownerIdAsObjectId);
+        if (!userWithItem) {
+            return res.status(404).send({ message: "User not found" });
+        }
+
+        // Ensure itemId is valid
+        if (!mongoose.Types.ObjectId.isValid(req.body.itemId)) {
+            return res.status(400).send({ message: "Invalid item ID" });
+        }
+        const itemIdAsObjectId = new mongoose.Types.ObjectId(req.body.itemId);
+
+        // Find the item
+        const item = await ItemModel.findById(itemIdAsObjectId);
+        if (!item) {
+            return res.status(404).send({ message: "Item not found" });
+        }
+
+        // Find the inventory item
+        const inventoryItem = await InventoryModel.findOne({
+            userId: ownerIdAsObjectId,
+            itemId: itemIdAsObjectId,
+        });
+        if (!inventoryItem) {
+            return res.status(404).send({ message: "Item not found in user inventory" });
+        }
+
+        // Create store object
+        const storeObjectReturnToStore: Store = {
+            ownerId: ownerIdAsObjectId,
+            itemId: itemIdAsObjectId,
+            quantity: req.body.quantity,
+            pricePerItem: req.body.price,
+        };
+
+        // Save the store item to the database
+        const storeItem = await StoreModel.create(storeObjectReturnToStore);
+
+        return res.status(200).send(storeItem);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Error processing request.", error });
+    }
+});
+
 
 itemRouter.post("/new-item", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
@@ -138,39 +195,39 @@ itemRouter.get("/my-items/:id", userGuard, async (req: AuthorizedRequest, res: R
 
 
 
-itemRouter.post("/post-to-shop", userGuard, async (req: AuthorizedRequest, res: Response) => {
-    try {
-        const requestedUserId = req.jwtDecodedUser.id;
-        const selectedItemId = req.body.itemId;
+// itemRouter.post("/post-to-shop", userGuard, async (req: AuthorizedRequest, res: Response) => {
+//     try {
+//         const requestedUserId = req.jwtDecodedUser.id;
+//         const selectedItemId = req.body.itemId;
 
-        const foundUser = await UserModel.findById(requestedUserId).select('-hashedPassword');
-        if (!foundUser) {
-            return res.status(404).send({ message: "User not found" });
-        }
+//         const foundUser = await UserModel.findById(requestedUserId).select('-hashedPassword');
+//         if (!foundUser) {
+//             return res.status(404).send({ message: "User not found" });
+//         }
 
-        const itemFromFrontend = await InventoryModel.findOne({ userId: requestedUserId, itemId: selectedItemId });
-        if (!itemFromFrontend) {
-            return res.status(404).send({ message: "Item not found in user inventory" });
-        }
+//         const itemFromFrontend = await InventoryModel.findOne({ userId: requestedUserId, itemId: selectedItemId });
+//         if (!itemFromFrontend) {
+//             return res.status(404).send({ message: "Item not found in user inventory" });
+//         }
 
-        const item = await ItemModel.findById(selectedItemId);
-        if (!item) {
-            return res.status(404).send({ message: "Item not found" });
-        }
-        const storeConverstion: Store = {
-            ownerId: foundUser._id,
-            itemId: item._id,
-            quantity: itemFromFrontend.quantity,
-            pricePerItem: 3,
-        }
+//         const item = await ItemModel.findById(selectedItemId);
+//         if (!item) {
+//             return res.status(404).send({ message: "Item not found" });
+//         }
+//         const storeConverstion: Store = {
+//             ownerId: foundUser._id,
+//             itemId: item._id,
+//             quantity: itemFromFrontend.quantity,
+//             pricePerItem: 3,
+//         }
 
-        // Further processing (e.g., adding the item to the shop)
-        res.status(200).send({ message: "Item posted to shop successfully" });
-    } catch (error) {
-        console.error("Error posting item to shop:", error);
-        res.status(500).send({ message: "Error posting item to shop.", error });
-    }
-});
+//         // Further processing (e.g., adding the item to the shop)
+//         res.status(200).send({ message: "Item posted to shop successfully" });
+//     } catch (error) {
+//         console.error("Error posting item to shop:", error);
+//         res.status(500).send({ message: "Error posting item to shop.", error });
+//     }
+// });
 
 
 

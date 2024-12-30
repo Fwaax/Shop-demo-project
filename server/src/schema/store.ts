@@ -1,10 +1,10 @@
 import mongoose, { Schema, Document, ObjectId } from "mongoose";
 
 export interface Store {
-    itemId: ObjectId;
+    itemId: mongoose.Types.ObjectId;
     quantity: number;
     pricePerItem: number;
-    ownerId: ObjectId;
+    ownerId: mongoose.Types.ObjectId;
 }
 
 export interface IStoreDocument extends Document { }

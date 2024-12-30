@@ -7,7 +7,7 @@ export interface IItem {
 }
 
 export interface IItemDocument extends IItem, Document {
-    _id: ObjectId; // Explicitly declare _id as ObjectId
+    _id: mongoose.Types.ObjectId; // Explicitly declare _id as ObjectId
 }
 
 const ItemSchema: Schema = new Schema(
