@@ -64,40 +64,40 @@ itemRouter.get("/item/:id", userGuard, async (req: AuthorizedRequest, res: Respo
 itemRouter.post("/item", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
         const requestedUserId = req.jwtDecodedUser.id;
-
         // Ensure requestedUserId is valid
         if (!mongoose.Types.ObjectId.isValid(requestedUserId)) {
             return res.status(400).send({ message: "Invalid user ID" });
         }
         const ownerIdAsObjectId = new mongoose.Types.ObjectId(requestedUserId);
-
         // Check if the user exists
-        const userWithItem = await UserModel.findById(ownerIdAsObjectId);
+        const userWithItem = await UserModel.findById(ownerIdAsObjectId).lean();
         if (!userWithItem) {
             return res.status(404).send({ message: "User not found" });
         }
-
         // Ensure itemId is valid
         if (!mongoose.Types.ObjectId.isValid(req.body.itemId)) {
             return res.status(400).send({ message: "Invalid item ID" });
         }
         const itemIdAsObjectId = new mongoose.Types.ObjectId(req.body.itemId);
-
         // Find the item
-        const item = await ItemModel.findById(itemIdAsObjectId);
+        const item = await ItemModel.findById(itemIdAsObjectId).lean();
         if (!item) {
             return res.status(404).send({ message: "Item not found" });
         }
-
         // Find the inventory item
-        const inventoryItem = await InventoryModel.findOne({
+        const inventoryItemDoc = await InventoryModel.findOne({
             userId: ownerIdAsObjectId,
             itemId: itemIdAsObjectId,
         });
-        if (!inventoryItem) {
+        if (!inventoryItemDoc) {
             return res.status(404).send({ message: "Item not found in user inventory" });
         }
-
+        if (inventoryItemDoc.quantity < req.body.quantity) {
+            return res.status(400).send({ message: "Not enough items in inventory" });
+        }
+        // Decrease quanitity in inventory
+        inventoryItemDoc.quantity -= req.body.quantity;
+        await inventoryItemDoc.save();
         // Create store object
         const storeObjectReturnToStore: Store = {
             ownerId: ownerIdAsObjectId,
@@ -105,10 +105,8 @@ itemRouter.post("/item", userGuard, async (req: AuthorizedRequest, res: Response
             quantity: req.body.quantity,
             pricePerItem: req.body.price,
         };
-
         // Save the store item to the database
         const storeItem = await StoreModel.create(storeObjectReturnToStore);
-
         return res.status(200).send(storeItem);
     } catch (error) {
         console.error(error);

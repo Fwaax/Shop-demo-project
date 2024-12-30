@@ -50,11 +50,11 @@ userRouter.delete("/:id", userGuard, async (req: AuthorizedRequest, res: Respons
 userRouter.put("/update", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
         const requestedUserId = req.jwtDecodedUser.id;
-        const user = await UserModel.findById(requestedUserId).select("+hashedPassword");
-        if (!user) {
+        const userDoc = await UserModel.findById(requestedUserId).select("+hashedPassword");
+        if (!userDoc) {
             return res.status(404).send({ message: "User not found" });
         }
-        const passwordMatch: boolean = await bcrypt.compare(req.body.currentPassword, user.hashedPassword);
+        const passwordMatch: boolean = await bcrypt.compare(req.body.currentPassword, userDoc.hashedPassword);
         if (!passwordMatch) {
             return res.status(401).send({ message: "Current password is incorrect" });
         }
@@ -62,8 +62,8 @@ userRouter.put("/update", userGuard, async (req: AuthorizedRequest, res: Respons
             return res.status(400).send({ message: "New password must be at least 6 characters long." });
         }
         const newHashedPassword = hashPassword(req.body.newPassword);
-        user.hashedPassword = newHashedPassword;
-        const updatedUser = await user.save();
+        userDoc.hashedPassword = newHashedPassword;
+        const updatedUser = await userDoc.save();
         return res.status(200).send({ message: "User updated successfully", user: updatedUser });
     } catch (error) {
         console.error(error); // Log error for debugging
