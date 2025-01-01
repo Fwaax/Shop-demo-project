@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "../const/env";
 import { DataContainedInToken } from "../interfaces";
+import { InventoryModel } from "../schema/inventory";
 
 export async function findUserByEmail(email: string) {
     const user = await UserModel.findOne({ email: email.toLocaleLowerCase() });
@@ -45,4 +46,13 @@ export async function getLoginToken(email: string, password: string) {
         email: foundUserByEmail.email,
     };
     return { token, user: userToReturn };
+}
+
+export async function addQuantityToItemInventory(userId: string, itemId: string, quantity: number) {
+    const inv = await InventoryModel.findOne({ userId: userId, itemId: itemId }).lean();
+    if (inv) {
+        await InventoryModel.updateOne({ userId: userId, itemId: itemId }, { $inc: { quantity: quantity } });
+    } else {
+        await InventoryModel.create({ userId: userId, itemId: itemId, quantity: quantity });
+    }
 }

@@ -8,6 +8,7 @@ import { IInventory, InventoryModel } from "../schema/inventory";
 import { IStoreDocument, IStore, StoreModel } from "../schema/store";
 import { log } from "node:console";
 import mongoose from "mongoose";
+import { addQuantityToItemInventory } from "../logic";
 
 const shopRouter: Router = express.Router();
 
@@ -96,10 +97,7 @@ shopRouter.delete("/delete-item/:id", userGuard, async (req: AuthorizedRequest, 
         }
         const quantityOfCalceledItem = storeItem.quantity;
         await StoreModel.deleteOne({ ownerId: requestedUserId, itemId: id });
-        await InventoryModel.updateOne(
-            { userId: requestedUserId, itemId: id },
-            { $inc: { quantity: quantityOfCalceledItem } }
-        );
+        await addQuantityToItemInventory(requestedUserId, id, quantityOfCalceledItem);
         return res.status(200).send({ message: "Item deleted successfully" });
     } catch (error) {
         console.error("Error deleting item:", error);
