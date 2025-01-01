@@ -66,17 +66,47 @@ shopRouter.get("/my-items", userGuard, async (req: AuthorizedRequest, res: Respo
 
 
 // Get all others items from the database
-shopRouter.get("/all-items", userGuard, async (req: Request, res: Response) => {
+shopRouter.get("/all-items", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
-        const items = await ItemModel.find();
-        if (items.length === 0) {
-            return res.status(404).send({ message: "No items found" });
-        }
-        return res.status(200).send(items);
+        const requestedUserId = req.jwtDecodedUser.id;
+
+        // Fetch all items in the shop with quantity > 0
+        const storeData: IStore[] = await StoreModel.find({
+            ownerId: !requestedUserId,
+            quantity: { $gt: 0 }, // Filter for quantity greater than 0
+        })
+            .populate("itemId")
+            .lean();
+
+        return res.status(200).send(storeData);
     } catch (error) {
+        console.error("Error fetching my items:", error);
         res.status(500).send({ message: "Error fetching items.", error });
     }
 })
+
+shopRouter.delete("/delete-item/:id", userGuard, async (req: AuthorizedRequest, res: Response) => {
+    try {
+        const requestedUserId = req.jwtDecodedUser.id;
+        const id = req.params.id; // Extract the id from the URL
+        console.log(`Here Delete route`);
+        const storeItem = await StoreModel.findOne({ ownerId: requestedUserId, itemId: id }).lean();
+        if (!storeItem) {
+            return res.status(404).send({ message: "Item not found in user inventory" });
+        }
+        const quantityOfCalceledItem = storeItem.quantity;
+        await StoreModel.deleteOne({ ownerId: requestedUserId, itemId: id });
+        await InventoryModel.updateOne(
+            { userId: requestedUserId, itemId: id },
+            { $inc: { quantity: quantityOfCalceledItem } }
+        );
+        return res.status(200).send({ message: "Item deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting item:", error);
+        res.status(500).send({ message: "Error deleting item.", error });
+    }
+});
+
 
 
 // shopRouter.post("/post-to-shop", userGuard, async (req: AuthorizedRequest, res: Response) => {
