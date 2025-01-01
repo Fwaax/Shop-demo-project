@@ -11,7 +11,7 @@ import { AuthorizedRequest } from "../interfaces";
 import { ItemValidationJoi } from "../validation/itemValidationJoi";
 import { UserModel } from "../schema/user";
 import { IInventory, InventoryModel } from "../schema/inventory";
-import { Store, StoreModel } from "../schema/store";
+import { IStore, StoreModel } from "../schema/store";
 import { log } from "node:console";
 import mongoose from "mongoose";
 
@@ -99,7 +99,7 @@ itemRouter.post("/item", userGuard, async (req: AuthorizedRequest, res: Response
         inventoryItemDoc.quantity -= req.body.quantity;
         await inventoryItemDoc.save();
         // Create store object
-        const storeObjectReturnToStore: Store = {
+        const storeObjectReturnToStore: IStore = {
             ownerId: ownerIdAsObjectId,
             itemId: itemIdAsObjectId,
             quantity: req.body.quantity,

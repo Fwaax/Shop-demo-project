@@ -10,6 +10,7 @@ import userRouter from "./routes/userRouter";
 import generateRouter from "./routes/generateRouter";
 import itemRouter from "./routes/itemRouter";
 import historyRouter from "./routes/historyRouter";
+import shopRouter from "./routes/shopRouter";
 
 export async function startExpressServer() {
     // Create Express app
@@ -38,6 +39,7 @@ export async function startExpressServer() {
     app.use("/generate", generateRouter);
     app.use("/item", itemRouter);
     app.use("/history", historyRouter)
+    app.use("/shop", shopRouter)
 
     app.listen(PORT, () => {
         console.log(`Server running at http://localhost:${PORT}`);
