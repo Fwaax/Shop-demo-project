@@ -3,12 +3,15 @@ import { useJwtToken } from '../hooks/useJwtToken';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import useModal from '../hooks/useModal';
+import BuyItemFromShopModal from '../modals/buyItemFromShopModal';
 
 
 const BuyPage = () => {
     const { user, token, clearData, payload } = useJwtToken();
     const location = useLocation();
     const navigate = useNavigate();
+    const { show, hide } = useModal();
     const shouldRefetch = location.state?.refetch ?? false;
 
     const { data: gatoShopMyItems = [], isLoading, isError, refetch } = useQuery({
@@ -90,10 +93,27 @@ const BuyPage = () => {
         refetchOnMount: shouldRefetch,
     });
 
+    // function handleBuy(itemId: string) {
+    //     axios({
+    //         method: 'delete',
+    //         url: `http://localhost:7821/shop/delete-item/${itemId}`,
+    //         headers: {
+    //             Authorization: `Bearer ${token}`,
+    //         },
+    //     })
+    //         .then(() => {
+    //             refetch(); // Refresh the user's items
+    //             refetch2(); // Refresh all items
+    //         })
+    //         .catch((error) => {
+    //             console.error("Error cancelling item:", error.response?.data || error.message);
+    //         });
+    // }
+
     function handleCancel(itemId: string) {
         axios({
-            method: 'delete',
-            url: `http://localhost:7821/shop/delete-item/${itemId}`,
+            method: 'put',
+            url: `http://localhost:7821/shop/buy-item/${itemId}`,
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -103,10 +123,16 @@ const BuyPage = () => {
                 refetch2(); // Refresh all items
             })
             .catch((error) => {
-                console.error("Error cancelling item:", error.response?.data || error.message);
+                console.error("Error buying item:", error.response?.data || error.message);
             });
     }
 
+    async function handleBuy(storeItemId: string, price: number) {
+        show(<BuyItemFromShopModal storeItemId={storeItemId} priceFromFE={price} hide={hide} />, {
+            unstyled: true,
+            showClose: false,
+        });
+    }
 
     return (
         <div className="w-[100%] flex flex-col mt-[50px]">
@@ -152,8 +178,6 @@ const BuyPage = () => {
                 )}
             </div>
 
-
-
             <div className="flex flex-col items-center">
                 <div className="text-xl"><strong>All Items</strong></div>
                 {isLoading ? (
@@ -173,6 +197,7 @@ const BuyPage = () => {
                                     <th className="border border-gray-300">Image</th>
                                     <th className="border border-gray-300">Price per unit</th>
                                     <th className="border border-gray-300">Owner</th>
+                                    <th className="border border-gray-300">Buy</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -186,6 +211,7 @@ const BuyPage = () => {
                                         </td>
                                         <td className='border border-gray-300'>{itemInShop.pricePerItem}</td>
                                         <td className='border border-gray-300'>{itemInShop.ownerId}</td>
+                                        <td className='border border-gray-300'><button onClick={() => handleBuy(itemInShop._id, itemInShop.pricePerItem)}>Buy</button></td>
                                     </tr>
                                 ))}
                             </tbody>
