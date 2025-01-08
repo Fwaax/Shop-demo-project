@@ -18,14 +18,14 @@ shopRouter.get("/my-items", userGuard, async (req: AuthorizedRequest, res: Respo
         const requestedUserId = req.jwtDecodedUser.id;
 
         // Fetch all items in the shop with quantity > 0
-        const storeData: IStore[] = await StoreModel.find({
+        const storeObjList: IStore[] = await StoreModel.find({
             ownerId: requestedUserId,
             quantity: { $gt: 0 }, // Filter for quantity greater than 0
         })
             .populate("itemId")
             .lean();
 
-        return res.status(200).send(storeData);
+        return res.status(200).send(storeObjList);
     } catch (error) {
         console.error("Error fetching my items:", error);
         res.status(500).send({ message: "Error fetching items.", error });
@@ -38,15 +38,15 @@ shopRouter.get("/all-items", userGuard, async (req: AuthorizedRequest, res: Resp
         const requestedUserId = req.jwtDecodedUser.id;
 
         // Fetch all items in the shop with quantity > 0
-        const storeData: IStore[] = await StoreModel.find({
+        const storeObjList: IStore[] = await StoreModel.find({
             ownerId: { $ne: requestedUserId },
             userId: { $ne: requestedUserId },
             quantity: { $gt: 0 }, // Filter for quantity greater than 0
         })
             .populate("itemId")
             .lean();
-        console.log(storeData);
-        return res.status(200).send(storeData);
+        console.log(storeObjList);
+        return res.status(200).send(storeObjList);
     } catch (error) {
         console.error("Error fetching my items:", error);
         res.status(500).send({ message: "Error fetching items.", error });
@@ -56,18 +56,18 @@ shopRouter.get("/all-items", userGuard, async (req: AuthorizedRequest, res: Resp
 shopRouter.delete("/delete-item", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
         const requestedUserId = req.jwtDecodedUser.id;
-        const storeItemId = req.body.storeItemId; // Extract the id from the URL
+        const storeObjId = req.body.storeObjId; // Extract the id from the URL
         console.log(`Here Delete route`);
-        const storeItem = await StoreModel.findOne({ _id: storeItemId }).lean();
-        if (!storeItem) {
+        const storeObj = await StoreModel.findOne({ _id: storeObjId }).lean();
+        if (!storeObj) {
             return res.status(404).send({ message: "Item not found in user inventory" });
         }
-        if (storeItem.ownerId.toString() !== requestedUserId) {
+        if (storeObj.ownerId.toString() !== requestedUserId) {
             return res.status(403).send({ message: "You don't have permission to delete this item" });
         }
-        const quantityOfCalceledItem = storeItem.quantity;
-        await StoreModel.deleteOne({ _id: storeItemId });
-        await createOrIncreaseItemInventory({ userId: requestedUserId, itemId: storeItem.itemId.toString(), quantity: quantityOfCalceledItem });
+        const quantityOfCalceledItem = storeObj.quantity;
+        await StoreModel.deleteOne({ _id: storeObjId });
+        await createOrIncreaseItemInventory({ userId: requestedUserId, itemId: storeObj.itemId.toString(), quantity: quantityOfCalceledItem });
         return res.status(200).send({ message: "Item deleted successfully" });
     } catch (error) {
         console.error("Error deleting item:", error);
@@ -81,16 +81,16 @@ shopRouter.put("/buy-item", userGuard, async (req: AuthorizedRequest, res: Respo
         const requestedUserId = req.jwtDecodedUser.id;
 
         // Find the store item being purchased by its ID
-        const storeItemDoc = await StoreModel.findOne({ _id: req.body.storeItemId });
-        if (!storeItemDoc) {
+        const storeObjDoc = await StoreModel.findOne({ _id: req.body.storeObjId });
+        if (!storeObjDoc) {
             return res.status(404).send({ message: "Requested Item not found in Shop" });
         }
 
         // Get the seller's user ID from the store item document
-        const sellerUserId = storeItemDoc.ownerId;
+        const sellerUserId = storeObjDoc.ownerId;
 
         // Check if the store has enough quantity of the item
-        if (storeItemDoc.quantity < req.body.quantity) {
+        if (storeObjDoc.quantity < req.body.quantity) {
             return res.status(400).send({ message: "Not enough items in shop" });
         }
 
@@ -107,7 +107,7 @@ shopRouter.put("/buy-item", userGuard, async (req: AuthorizedRequest, res: Respo
         }
 
         // Calculate the total cost of the purchase
-        const totalCost = storeItemDoc.pricePerItem * req.body.quantity;
+        const totalCost = storeObjDoc.pricePerItem * req.body.quantity;
 
         // Check if the buyer has enough balance to make the purchase
         if (buyerUserDoc.balance < totalCost) {
@@ -125,16 +125,16 @@ shopRouter.put("/buy-item", userGuard, async (req: AuthorizedRequest, res: Respo
         await sellingUserDoc.save();
 
         // Add the purchased items to the buyer's inventory
-        await createOrIncreaseItemInventory({ userId: requestedUserId, itemId: storeItemDoc.itemId.toString(), quantity: req.body.quantity });
+        await createOrIncreaseItemInventory({ userId: requestedUserId, itemId: storeObjDoc.itemId.toString(), quantity: req.body.quantity });
 
         // Reduce the quantity of the item in the store
-        storeItemDoc.quantity -= req.body.quantity;
+        storeObjDoc.quantity -= req.body.quantity;
 
         // If the item's quantity reaches zero, delete it from the store; otherwise, update it
-        if (storeItemDoc.quantity === 0) {
-            await StoreModel.deleteOne({ _id: storeItemDoc._id });
+        if (storeObjDoc.quantity === 0) {
+            await StoreModel.deleteOne({ _id: storeObjDoc._id });
         } else {
-            await storeItemDoc.save();
+            await storeObjDoc.save();
         }
 
         // Send success response
@@ -145,40 +145,5 @@ shopRouter.put("/buy-item", userGuard, async (req: AuthorizedRequest, res: Respo
         res.status(500).send({ message: "Error updating item.", error });
     }
 });
-
-
-// shopRouter.post("/post-to-shop", userGuard, async (req: AuthorizedRequest, res: Response) => {
-//     try {
-//         const requestedUserId = req.jwtDecodedUser.id;
-//         const selectedItemId = req.body.itemId;
-
-//         const foundUser = await UserModel.findById(requestedUserId).select('-hashedPassword');
-//         if (!foundUser) {
-//             return res.status(404).send({ message: "User not found" });
-//         }
-
-//         const itemFromFrontend = await InventoryModel.findOne({ userId: requestedUserId, itemId: selectedItemId });
-//         if (!itemFromFrontend) {
-//             return res.status(404).send({ message: "Item not found in user inventory" });
-//         }
-
-//         const item = await ItemModel.findById(selectedItemId);
-//         if (!item) {
-//             return res.status(404).send({ message: "Item not found" });
-//         }
-//         const storeConverstion: Store = {
-//             ownerId: foundUser._id,
-//             itemId: item._id,
-//             quantity: itemFromFrontend.quantity,
-//             pricePerItem: 3,
-//         }
-
-//         // Further processing (e.g., adding the item to the shop)
-//         res.status(200).send({ message: "Item posted to shop successfully" });
-//     } catch (error) {
-//         console.error("Error posting item to shop:", error);
-//         res.status(500).send({ message: "Error posting item to shop.", error });
-//     }
-// });
 
 export default shopRouter;
