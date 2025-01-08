@@ -48,11 +48,10 @@ export async function getLoginToken(email: string, password: string) {
     return { token, user: userToReturn };
 }
 
-export async function addQuantityToItemInventory(userId: string, itemId: string, quantity: number) {
-    const inv = await InventoryModel.findOne({ userId: userId, itemId: itemId }).lean();
-    if (inv) {
-        await InventoryModel.updateOne({ userId: userId, itemId: itemId }, { $inc: { quantity: quantity } });
-    } else {
-        await InventoryModel.create({ userId: userId, itemId: itemId, quantity: quantity });
-    }
+export async function addQuantityToItemInventory(params: { userId: string, itemId: string, quantity: number }) {
+    await InventoryModel.findOneAndUpdate(
+        { userId: params.userId, itemId: params.itemId }, // Filter criteria
+        { $inc: { quantity: params.quantity } },  // Increment quantity if the document exists
+        { upsert: true, new: true }        // Create a new document if it doesn't exist
+    );
 }

@@ -53,18 +53,21 @@ shopRouter.get("/all-items", userGuard, async (req: AuthorizedRequest, res: Resp
     }
 })
 
-shopRouter.delete("/delete-item/:id", userGuard, async (req: AuthorizedRequest, res: Response) => {
+shopRouter.delete("/delete-item", userGuard, async (req: AuthorizedRequest, res: Response) => {
     try {
         const requestedUserId = req.jwtDecodedUser.id;
-        const id = req.params.id; // Extract the id from the URL
+        const storeItemId = req.body.storeItemId; // Extract the id from the URL
         console.log(`Here Delete route`);
-        const storeItem = await StoreModel.findOne({ ownerId: requestedUserId, itemId: id }).lean();
+        const storeItem = await StoreModel.findOne({ _id: storeItemId }).lean();
         if (!storeItem) {
             return res.status(404).send({ message: "Item not found in user inventory" });
         }
+        if (storeItem.ownerId.toString() !== requestedUserId) {
+            return res.status(403).send({ message: "You don't have permission to delete this item" });
+        }
         const quantityOfCalceledItem = storeItem.quantity;
-        await StoreModel.deleteOne({ ownerId: requestedUserId, itemId: id });
-        await createOrIncreaseItemInventory(requestedUserId, id, quantityOfCalceledItem);
+        await StoreModel.deleteOne({ _id: storeItemId });
+        await createOrIncreaseItemInventory({ userId: requestedUserId, itemId: storeItem.itemId.toString(), quantity: quantityOfCalceledItem });
         return res.status(200).send({ message: "Item deleted successfully" });
     } catch (error) {
         console.error("Error deleting item:", error);
@@ -122,7 +125,7 @@ shopRouter.put("/buy-item", userGuard, async (req: AuthorizedRequest, res: Respo
         await sellingUserDoc.save();
 
         // Add the purchased items to the buyer's inventory
-        await createOrIncreaseItemInventory(requestedUserId, storeItemDoc.itemId.toString(), req.body.quantity);
+        await createOrIncreaseItemInventory({ userId: requestedUserId, itemId: storeItemDoc.itemId.toString(), quantity: req.body.quantity });
 
         // Reduce the quantity of the item in the store
         storeItemDoc.quantity -= req.body.quantity;

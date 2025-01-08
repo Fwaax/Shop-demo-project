@@ -110,13 +110,14 @@ const BuyPage = () => {
     //         });
     // }
 
-    function handleCancel(itemId: string) {
+    function handleCancel(storeItemId: string) {
         axios({
             method: 'put',
-            url: `http://localhost:7821/shop/buy-item/${itemId}`,
+            url: `http://localhost:7821/shop/delete-item`,
             headers: {
                 Authorization: `Bearer ${token}`,
             },
+            data: { storeItemId: storeItemId },
         })
             .then(() => {
                 refetch(); // Refresh the user's items
@@ -169,7 +170,7 @@ const BuyPage = () => {
                                         </td>
                                         <td className='border border-gray-300'>{itemInShop.pricePerItem}</td>
                                         <td className='border border-gray-300'>{itemInShop.ownerId}</td>
-                                        <td className='border border-gray-300'><button onClick={() => handleCancel(itemInShop.itemId._id)}>Cancel</button></td>
+                                        <td className='border border-gray-300'><button onClick={() => handleCancel(itemInShop._id)}>Cancel</button></td>
                                     </tr>
                                 ))}
                             </tbody>
