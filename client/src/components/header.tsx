@@ -33,6 +33,10 @@ const Header = () => {
         navigate("/buy");
     }
 
+    function homePageHandler() {
+        navigate("/");
+    }
+
     const tokenExists = token ? true : false;
 
     return (
@@ -43,7 +47,7 @@ const Header = () => {
                         <div>
                             <CatSvg />
                         </div>
-                        <h4 className="text-white font-bold text-lg">El Gato</h4>
+                        <h4 className="text-white font-bold text-lg" onClick={homePageHandler}>El Gato</h4>
                     </div>
                     <div>
                         <nav>

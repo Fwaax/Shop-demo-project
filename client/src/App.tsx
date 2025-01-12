@@ -32,17 +32,15 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomePage /> },
       { path: "debug", element: <DebugPage /> },
+      { path: "/login", element: <LoginPage /> },
+      { path: "/register", element: <RegisterPage /> },
+      { path: "/update-account", element: <AccountEdit /> },
+      { path: "/post-item", element: <PostItemPage /> },
+      { path: "/generate", element: <GenerateMoneyPage /> },
+      { path: "/my-items", element: <MyItemsPage /> },
+      { path: "/buy", element: <BuyPage /> },
     ],
   },
-  { path: "/login", element: <LoginPage /> },
-  { path: "/register", element: <RegisterPage /> },
-  { path: "/update-account", element: <AccountEdit /> },
-  { path: "/post-item", element: <PostItemPage /> },
-  { path: "/generate", element: <GenerateMoneyPage /> },
-  { path: "/my-items", element: <MyItemsPage /> },
-  { path: "/buy", element: <BuyPage /> },
-  // { path: "/price-check", element: <PriceCheck /> },
-  // { path: "/generate-item", element: <GenerateItemPage /> },
 ]);
 
 function App() {
