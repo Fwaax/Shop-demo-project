@@ -37,6 +37,10 @@ const Header = () => {
         navigate("/");
     }
 
+    function handleGenerate() {
+        navigate("/generate");
+    }
+
     const tokenExists = token ? true : false;
 
     return (
@@ -47,14 +51,14 @@ const Header = () => {
                         <div>
                             <CatSvg />
                         </div>
-                        <h4 className="text-white font-bold text-lg" onClick={homePageHandler}>El Gato</h4>
+                        <h4 className="text-white font-bold text-lg cursor-pointer hover:text-black transition-colors" onClick={homePageHandler}>El Gato</h4>
                     </div>
                     <div>
                         <nav>
                             <ul className="flex gap-8 text-white font-medium">
                                 <li className="cursor-pointer hover:text-green-400 transition-colors" onClick={buyPageHandler}>Buy</li>
                                 <li className="cursor-pointer hover:text-green-400 transition-colors">History</li>
-                                <li className="cursor-pointer hover:text-green-400 transition-colors">Balance</li>
+                                <li className="cursor-pointer hover:text-green-400 transition-colors" onClick={handleGenerate}>Balance</li>
                                 {tokenExists ? (
                                     <>
                                         <li onClick={myItemsHandler}

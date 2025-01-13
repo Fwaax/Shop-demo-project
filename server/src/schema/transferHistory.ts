@@ -17,8 +17,8 @@ export const TransferHistorySchema: Schema = new Schema({
     fromUserID: { type: Schema.Types.ObjectId, ref: "User", required: true },
     toUserID: { type: Schema.Types.ObjectId, ref: "User", required: true },
     totalCost: { type: Number, required: true },
-    dateInUnix: { type: Number, required: true },
+    // dateInUnix: { type: Number, required: true },
+    dateInUnix: { type: Number, required: true, default: () => Math.floor(Date.now() / 1000) },
 });
-
 
 export const TransferHistoryModel = mongoose.model<ITransferHistoryDocument>("TransferHistory", TransferHistorySchema);

@@ -48,7 +48,7 @@ export async function getLoginToken(email: string, password: string) {
     return { token, user: userToReturn };
 }
 
-export async function addQuantityToItemInventory(params: { userId: string, itemId: string, quantity: number }) {
+export async function createOrIncreaseItemInventory(params: { userId: string, itemId: string, quantity: number }) {
     await InventoryModel.findOneAndUpdate(
         { userId: params.userId, itemId: params.itemId }, // Filter criteria
         { $inc: { quantity: params.quantity } },  // Increment quantity if the document exists

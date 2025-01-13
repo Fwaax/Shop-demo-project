@@ -8,7 +8,8 @@ import { IInventory, InventoryModel } from "../schema/inventory";
 import { IStoreDocument, IStore, StoreModel } from "../schema/store";
 import { log } from "node:console";
 import mongoose from "mongoose";
-import { addQuantityToItemInventory as createOrIncreaseItemInventory } from "../logic";
+import { createOrIncreaseItemInventory } from "../logic";
+import { TransferHistoryModel } from "../schema/transferHistory";
 
 const shopRouter: Router = express.Router();
 
@@ -136,6 +137,15 @@ shopRouter.put("/buy-item", userGuard, async (req: AuthorizedRequest, res: Respo
         } else {
             await storeObjDoc.save();
         }
+
+        // await TransferHistoryModel.create({
+        //     itemId: storeObjDoc.itemId.toString(),
+        //     quantity: req.body.quantity,
+        //     fromUserID: sellerUserId,
+        //     toUserID: requestedUserId,
+        //     totalCost: totalCost,
+        //     dateInUnix: Math.floor(Date.now() / 1000),
+        // });
 
         // Send success response
         return res.status(200).send({ message: "Item updated successfully" });

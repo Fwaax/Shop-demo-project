@@ -110,14 +110,14 @@ const BuyPage = () => {
     //         });
     // }
 
-    function handleCancel(storeItemId: string) {
+    function handleCancel(storeObjId: string) {
         axios({
             method: 'put',
             url: `http://localhost:7821/shop/delete-item`,
             headers: {
                 Authorization: `Bearer ${token}`,
             },
-            data: { storeItemId: storeItemId },
+            data: { storeObjId: storeObjId },
         })
             .then(() => {
                 refetch(); // Refresh the user's items
@@ -128,8 +128,8 @@ const BuyPage = () => {
             });
     }
 
-    async function handleBuy(storeItemId: string, price: number) {
-        show(<BuyItemFromShopModal storeItemId={storeItemId} priceFromFE={price} hide={hide} />, {
+    async function handleBuy(storeObjId: string, price: number) {
+        show(<BuyItemFromShopModal storeObjId={storeObjId} priceFromFE={price} hide={hide} />, {
             unstyled: true,
             showClose: false,
         });

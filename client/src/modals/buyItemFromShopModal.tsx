@@ -4,7 +4,7 @@ import { NumericInputWithNumberValue } from '../components/numberInput';
 import axios from 'axios';
 import { useJwtToken } from '../hooks/useJwtToken';
 
-const BuyItemFromShopModal = (props: { storeItemId: string, priceFromFE: number, hide: () => void }) => {
+const BuyItemFromShopModal = (props: { storeObjId: string, priceFromFE: number, hide: () => void }) => {
     const [insertedPriceValue, setInsertedPriceValue] = React.useState(0);
     const [insertedQuantityValue, setInsertedQuantityValue] = React.useState(0);
     const { token } = useJwtToken();
@@ -17,8 +17,10 @@ const BuyItemFromShopModal = (props: { storeItemId: string, priceFromFE: number,
                 headers: {
                     Authorization: `Bearer ${token}`
                 },
-                data: { quantity: insertedQuantityValue, storeItemId: props.storeItemId },
+                data: { quantity: insertedQuantityValue, storeObjId: props.storeObjId },
             });
+            console.log(`props.storeObjId`, props.storeObjId);
+
             console.log(`response`, response);
             return response.data || []; // Ensure response is always defined
         } catch (error) {

@@ -14,7 +14,7 @@ import { IInventory, InventoryModel } from "../schema/inventory";
 import { IStore, StoreModel } from "../schema/store";
 import { log } from "node:console";
 import mongoose from "mongoose";
-import { addQuantityToItemInventory } from "../logic";
+import { createOrIncreaseItemInventory } from "../logic";
 
 const itemRouter: Router = express.Router();
 
@@ -145,7 +145,7 @@ itemRouter.post("/new-item", userGuard, async (req: AuthorizedRequest, res: Resp
         // Add the item to the user's inventory
         const objectToAddToInventory: IInventory = { userId: foundUser._id, itemId: newItemObjectId, quantity: itemQuantity };
         // add item to inventoryschema
-        await addQuantityToItemInventory({ userId: foundUser._id.toString(), itemId: newItemObjectId.toString(), quantity: itemQuantity });
+        await createOrIncreaseItemInventory({ userId: foundUser._id.toString(), itemId: newItemObjectId.toString(), quantity: itemQuantity });
         console.log(`newItem`, newItem);
         return res.status(200).send({ message: "Item added successfully", item: newItem });
     } catch (error) {

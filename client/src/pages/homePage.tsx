@@ -15,15 +15,15 @@ const HomePage = () => {
     const { user, token, clearData } = useJwtToken();
 
 
-    const { data: allItems = [], isLoading, isError, refetch } = useQuery({
+    const { data: transactionHistory = [], isLoading, isError, refetch } = useQuery({
         staleTime: 0,
         gcTime: 0,
-        queryKey: ["allItems"],
+        queryKey: ["transactionHistory"],
         queryFn: async () => {
             try {
                 const response = await axios({
                     method: 'get',
-                    url: 'http://localhost:7821/history/',
+                    url: 'http://localhost:7821/history/transaction-history',
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -54,7 +54,7 @@ const HomePage = () => {
                                 <th className='border border-gray-300'>ImageUrl</th>
                             </tr>
                             {
-                                allItems.map((item: IPopulatedTransferHistory) => (
+                                transactionHistory.map((item: IPopulatedTransferHistory) => (
                                     <tr key={item._id}>
                                         <td className='border border-gray-300 overflow-hidden'>{item._id}</td>
                                         <td className='border border-gray-300'>{item.itemId.name}</td>
